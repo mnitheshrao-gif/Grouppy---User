@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from "motion/react";
 import grouppyLogo from "@/imports/Grouppy_Logo-removebg-preview.png";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type AppMode = "customer" | "agency" | "driver";
+type AppMode = "customer";
 type CustomerScreen =
   | "splash" | "login" | "otp" | "home" | "results" | "details"
   | "seats" | "passenger" | "payment" | "confirmed" | "trips" | "live" | "profile";
@@ -25,7 +25,7 @@ type AgencyScreen =
 type DriverScreen =
   | "driverDash" | "todayTrips" | "navigation" | "verification" | "tripStatus" | "earnings" | "driverProfile";
 
-type Screen = CustomerScreen | AgencyScreen | DriverScreen;
+type Screen = CustomerScreen;
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const ROUTES = [
