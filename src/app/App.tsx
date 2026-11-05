@@ -416,153 +416,78 @@ function OtpScreen({ onDone }: { onDone: () => void }) {
 }
 
 // 4. HOME
-function HomeScreen({ onNavigate }: { onNavigate: (s: CustomerScreen) => void }) {
-  const [from, setFrom] = useState("Mumbai");
-  const [to, setTo] = useState("Pune");
-  const [date, setDate] = useState("Mon, Aug 5");
-  const [passengers, setPassengers] = useState(1);
+function HomeScreen() {
+  const [localHire, setLocalHire] = useState(false);
+  const [pickup, setPickup] = useState("");
+  const [destination, setDestination] = useState("");
+  const [departure, setDeparture] = useState("");
+  const [hours, setHours] = useState("6");
+  const [passengers, setPassengers] = useState("");
+  const [reviewing, setReviewing] = useState(false);
+
+  const route = localHire
+    ? `Local hire from ${pickup.trim()}`
+    : `${pickup.trim()} → ${destination.trim()} → ${pickup.trim()}`;
+  const fieldClass = "w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm";
+  const buttonClass = "w-full rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white";
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-y-auto">
-      {/* Header */}
-      <div className="px-4 pt-5 pb-4" style={{ background: `linear-gradient(160deg, ${G.primaryDark} 0%, ${G.primary} 100%)` }}>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-white/60 text-xs font-medium">Good morning 👋</p>
-            <h2 className="text-white text-lg font-bold" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Priya Sharma</h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="relative p-2 rounded-xl bg-white/10">
-              <Bell size={18} className="text-white" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400" />
-            </button>
-            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">PS</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Search Card */}
-        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-card rounded-3xl p-4 shadow-xl">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-2.5 h-2.5 rounded-full border-2 border-primary bg-white" />
-                <div className="w-0.5 h-5 bg-border" />
-                <div className="w-2.5 h-2.5 rounded-sm bg-primary" />
-              </div>
-              <div className="flex-1 flex flex-col gap-2">
-                <button onClick={() => {}} className="flex items-center gap-2 bg-muted rounded-2xl px-3 py-2.5">
-                  <MapPin size={14} className="text-primary shrink-0" />
-                  <span className="text-sm font-semibold text-foreground flex-1">{from}</span>
-                  <ChevronDown size={14} className="text-muted-foreground" />
-                </button>
-                <button onClick={() => {}} className="flex items-center gap-2 bg-muted rounded-2xl px-3 py-2.5">
-                  <MapPin size={14} className="text-amber-500 shrink-0" />
-                  <span className="text-sm font-semibold text-foreground flex-1">{to}</span>
-                  <ChevronDown size={14} className="text-muted-foreground" />
-                </button>
-              </div>
-              <button
-                onClick={() => { setFrom(to); setTo(from); }}
-                className="p-2.5 rounded-2xl bg-secondary border border-border"
-              >
-                <RefreshCw size={14} className="text-primary" />
-              </button>
-            </div>
-
-            <div className="flex gap-2">
-              <button className="flex-1 flex items-center gap-2 bg-muted rounded-2xl px-3 py-2.5">
-                <Calendar size={14} className="text-primary" />
-                <span className="text-xs font-semibold text-foreground">{date}</span>
-              </button>
-              <div className="flex items-center gap-2 bg-muted rounded-2xl px-3 py-2.5">
-                <Users size={14} className="text-primary" />
-                <button onClick={() => setPassengers(Math.max(1, passengers - 1))} className="p-0.5"><Minus size={12} className="text-muted-foreground" /></button>
-                <span className="text-xs font-bold text-foreground w-3 text-center">{passengers}</span>
-                <button onClick={() => setPassengers(Math.min(15, passengers + 1))} className="p-0.5"><Plus size={12} className="text-primary" /></button>
-              </div>
-            </div>
-
-            <button
-              onClick={() => onNavigate("results")}
-              className="w-full py-3.5 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
-              style={{ background: `linear-gradient(135deg, ${G.primary}, ${G.primaryDark})` }}
-            >
-              <Search size={16} />
-              Search Seats
-            </button>
-          </div>
-        </motion.div>
-      </div>
-
-      <div className="flex-1 px-4 pt-5 pb-4 flex flex-col gap-5">
-        {/* Promo Banner */}
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="rounded-3xl overflow-hidden relative h-32" style={{ background: `linear-gradient(120deg, ${G.primaryDark}, #1A8A5A)` }}>
-          <div className="absolute inset-0 flex items-center px-5">
-            <div>
-              <Badge color="gold">LIMITED OFFER</Badge>
-              <h3 className="text-white font-bold text-lg mt-1">First Ride Free!</h3>
-              <p className="text-white/70 text-xs mt-0.5">Use code <span className="font-bold text-amber-300">GROUPPY1</span></p>
-            </div>
-          </div>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-10">
-            <Bus size={80} className="text-white" />
-          </div>
-          <div className="absolute bottom-4 right-5">
-            <button className="px-3 py-1.5 rounded-xl bg-white text-xs font-bold text-primary">Claim Now</button>
-          </div>
-        </motion.div>
-
-        {/* Popular Routes */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-foreground text-base">Popular Routes</h3>
-            <button className="text-primary text-xs font-semibold flex items-center gap-1">See all <ChevronRight size={12} /></button>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {POPULAR_ROUTES.map((r, i) => (
-              <motion.button
-                key={i}
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 * i + 0.3 }}
-                onClick={() => onNavigate("results")}
-                className="bg-card rounded-2xl p-3.5 border border-border text-left hover:border-primary/30 hover:shadow-md transition-all"
-              >
-                <div className="flex items-center gap-1.5 mb-2">
-                  <MapPin size={11} className="text-primary" />
-                  <span className="text-xs font-semibold text-foreground">{r.from} → {r.to}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-primary font-bold text-sm">₹{r.price}</span>
-                  <span className="text-muted-foreground text-xs">{r.duration}</span>
-                </div>
-              </motion.button>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Searches */}
-        <div>
-          <h3 className="font-bold text-foreground text-base mb-3">Recent Searches</h3>
-          <div className="flex flex-col gap-2">
-            {[
-              { from: "Delhi", to: "Agra", date: "Jul 20" },
-              { from: "Bangalore", to: "Mysore", date: "Jul 15" },
-            ].map((r, i) => (
-              <button key={i} onClick={() => onNavigate("results")} className="flex items-center gap-3 bg-card rounded-2xl p-3.5 border border-border hover:border-primary/30 transition-all">
-                <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center">
-                  <Clock size={16} className="text-primary" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-semibold text-foreground">{r.from} → {r.to}</p>
-                  <p className="text-xs text-muted-foreground">{r.date}</p>
-                </div>
-                <ChevronRight size={16} className="text-muted-foreground" />
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className="flex h-full flex-col overflow-y-auto bg-background">
+      <header className="bg-primary px-5 py-6 text-white">
+        <p className="text-sm font-medium">Grouppy</p>
+        <h1 className="mt-1 text-2xl font-bold">Plan a group trip</h1>
+      </header>
+      {reviewing ? (
+        <section className="m-4 space-y-4 rounded-2xl border border-border bg-card p-4">
+          <h2 className="text-lg font-bold">Review your trip request</h2>
+          <p className="break-words text-sm font-medium">{route}</p>
+          <p className="text-sm">{departure.replace("T", " ")} · {hours} hours</p>
+          <p className="text-sm">{passengers} {Number(passengers) === 1 ? "passenger" : "passengers"}</p>
+          <p className="text-sm">Agencies can quote available vehicles with enough seats for your group.</p>
+          <p className="text-sm text-muted-foreground">Preview only. Your request has yet to be sent to agencies.</p>
+          <button className={buttonClass} onClick={() => setReviewing(false)}>Edit trip</button>
+        </section>
+      ) : (
+        <form
+          className="m-4 space-y-4 rounded-2xl border border-border bg-card p-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (pickup.trim() && (localHire || destination.trim())) setReviewing(true);
+          }}
+        >
+          <label className="block space-y-1 text-sm font-semibold">
+            <span>Trip type</span>
+            <select className={fieldClass} value={localHire ? "local" : "round"} onChange={(event) => setLocalHire(event.target.value === "local")}>
+              <option value="round">Destination round trip</option>
+              <option value="local">Local hire</option>
+            </select>
+          </label>
+          <label className="block space-y-1 text-sm font-semibold">
+            <span>Pickup address</span>
+            <input className={fieldClass} required pattern=".*\S.*" value={pickup} onChange={(event) => setPickup(event.target.value)} />
+          </label>
+          {!localHire && (
+            <label className="block space-y-1 text-sm font-semibold">
+              <span>Destination address</span>
+              <input className={fieldClass} required pattern=".*\S.*" value={destination} onChange={(event) => setDestination(event.target.value)} />
+            </label>
+          )}
+          <label className="block space-y-1 text-sm font-semibold">
+            <span>Pickup date and time</span>
+            <input className={fieldClass} type="datetime-local" required value={departure} onChange={(event) => setDeparture(event.target.value)} />
+          </label>
+          <label className="block space-y-1 text-sm font-semibold">
+            <span>Trip duration in hours</span>
+            <input className={fieldClass} type="number" min="6" step="1" required value={hours} onChange={(event) => setHours(event.target.value)} />
+          </label>
+          <label className="block space-y-1 text-sm font-semibold">
+            <span>How many people are travelling?</span>
+            <input className={fieldClass} type="number" inputMode="numeric" min="1" step="1" required value={passengers} onChange={(event) => setPassengers(event.target.value)} />
+          </label>
+          <p className="text-xs text-muted-foreground">Vehicle options depend on your group size. Extra time or kilometres may cost more.</p>
+          <button className={buttonClass} type="submit">Review trip request</button>
+        </form>
+      )}
     </div>
   );
 }
@@ -2090,7 +2015,7 @@ export default function App() {
   const [appMode, setAppMode] = useState<AppMode>("customer");
 
   // Customer flow
-  const [customerScreen, setCustomerScreen] = useState<CustomerScreen>("splash");
+  const [customerScreen, setCustomerScreen] = useState<CustomerScreen>("home");
   // Agency flow
   const [agencyScreen, setAgencyScreen] = useState<AgencyScreen>("dashboard");
   // Driver flow
@@ -2115,7 +2040,7 @@ export default function App() {
       style={{ background: "linear-gradient(135deg, #0D3B26 0%, #1A6B47 50%, #0D3B26 100%)", fontFamily: "'Inter', sans-serif" }}
     >
       {/* Phone Frame */}
-      <div className="relative w-full max-w-[390px] mx-auto" style={{ height: "844px" }}>
+      <div className="relative w-full max-w-[390px] mx-auto" style={{ height: "min(844px, 100dvh)" }}>
         {/* Phone shell */}
         <div className="absolute inset-0 rounded-[48px] bg-gray-900 shadow-2xl" style={{ boxShadow: "0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.1)" }} />
 
@@ -2149,7 +2074,7 @@ export default function App() {
                   {customerScreen === "splash" && <SplashScreen onDone={() => setCustomerScreen("login")} />}
                   {customerScreen === "login" && <LoginScreen onDone={() => setCustomerScreen("otp")} />}
                   {customerScreen === "otp" && <OtpScreen onDone={() => setCustomerScreen("home")} />}
-                  {customerScreen === "home" && <HomeScreen onNavigate={setCustomerScreen} />}
+                  {customerScreen === "home" && <HomeScreen />}
                   {customerScreen === "results" && <ResultsScreen onNavigate={setCustomerScreen} />}
                   {customerScreen === "details" && <DetailsScreen onNavigate={setCustomerScreen} />}
                   {customerScreen === "seats" && <SeatsScreen onNavigate={setCustomerScreen} />}
