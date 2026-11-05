@@ -1,9 +1,9 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
-  ArrowLeft, ArrowRight, ArrowRightLeft, BadgeCheck, Bell,
+  ArrowLeft, ArrowRight, ArrowRightLeft, Bell,
   BusFront, CalendarDays, CheckCircle2, ChevronRight, Clock3,
   Compass, CreditCard, Headphones, Home, Info, MapPin,
-  Pencil, Plus, RefreshCcw, Route, ShieldCheck, Sparkles,
+  Pencil, Plus, Route, ShieldCheck, Sparkles,
   TicketCheck, UsersRound, Wallet, XCircle
 } from "lucide-react";
 import grouppyLogo from "../imports/Grouppy_Logo-removebg-preview.png";
@@ -84,10 +84,10 @@ function mockQuotes(seats: number): Quote[] {
 function Status({ status }: { status: RideStatus }) {
   return <span className={"gc-status gc-" + badgeClass[status]}>{stage[status]}</span>;
 }
-function SectionTitle({ children, caption }: { children: React.ReactNode; caption?: string }) {
+function SectionTitle({ children, caption }: { children: ReactNode; caption?: string }) {
   return <div className="gc-section-title"><h2>{children}</h2>{caption && <p>{caption}</p>}</div>;
 }
-function FormField({ title, children, wide = false }: { title: string; children: React.ReactNode; wide?: boolean }) {
+function FormField({ title, children, wide = false }: { title: string; children: ReactNode; wide?: boolean }) {
   return <label className={"gc-field" + (wide ? " gc-wide" : "")}>
     <span>{title}</span>{children}
   </label>;
@@ -254,7 +254,7 @@ export default function CustomerBookingApp() {
                       <FormField title="Departure date"><div className="gc-input-icon"><CalendarDays size={17} /><input aria-label="Departure date" required type="date" min={nowDate()} value={form.departDate} onChange={event => setForm(prev => ({ ...prev, departDate: event.target.value, returnDate: event.target.value > prev.returnDate ? event.target.value : prev.returnDate }))} /></div></FormField>
                       <FormField title="Return date"><div className="gc-input-icon"><CalendarDays size={17} /><input aria-label="Return date" required type="date" min={form.departDate} value={form.returnDate} onChange={event => setForm(prev => ({ ...prev, returnDate: event.target.value }))} /></div></FormField>
                       <FormField title="Pickup time"><div className="gc-input-icon"><Clock3 size={17} /><input required aria-label="Pickup time" type="time" value={form.departureTime} onChange={event => setForm(prev => ({ ...prev, departureTime: event.target.value }))} /></div></FormField>
-                      <FormField title="Passengers"><div className="gc-stepper"><UsersRound size={17} /><button type="button" aria-label="Remove passenger" onClick={() => setForm(prev => ({ ...prev, passengers: Math.max(1, prev.passengers - 1) }))}>−</button><b>{form.passengers}</b><button type="button" aria-label="Add passenger" onClick={() => setForm(prev => ({ ...prev, passengers: Math.min(18, prev.passengers + 1), seats: Math.min(18, Math.max(prev.seats, prev.passengers + 1)) }))}>+</button></div></FormField>
+                      <FormField title="Passengers"><div className="gc-stepper"><UsersRound size={17} /><button type="button" aria-label="Remove passenger" onClick={() => setForm(prev => ({ ...prev, passengers: Math.max(1, prev.passengers - 1) }))}>−</button><b>{form.passengers}</b><button type="button" aria-label="Add passenger" onClick={() => setForm(prev => ({ ...prev, passengers: Math.min(18, prev.passengers + 1), seats: [8, 12, 18].find(capacity => capacity >= Math.max(prev.seats, prev.passengers + 1)) || 18 }))}>+</button></div></FormField>
                       <FormField title="Vehicle capacity" wide>
                         <div className="gc-capacities">{[8, 12, 18].map(seats => <button key={seats} type="button" onClick={() => setForm(prev => ({ ...prev, seats, passengers: Math.min(prev.passengers, seats) }))} className={form.seats === seats ? "selected" : ""}><BusFront size={17} /> {seats} seats</button>)}</div>
                       </FormField>
