@@ -67,6 +67,8 @@ const badgeClass: Record<RideStatus, string> = {
 // must be supplied by verified agency inventory from the shared booking API.
 type SampleVehicle = { name: string; capacity: number; ac: boolean };
 const SAMPLE_FLEET: SampleVehicle[] = [
+  { name: "4-passenger car", capacity: 4, ac: true },
+  { name: "6-passenger MPV", capacity: 6, ac: true },
   { name: "Compact group van", capacity: 7, ac: true },
   { name: "8-seat tourist van", capacity: 8, ac: true },
   { name: "Tata Winger-style van", capacity: 9, ac: true },
