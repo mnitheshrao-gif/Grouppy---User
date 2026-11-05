@@ -14,7 +14,7 @@ type RideStatus = "collecting" | "quotes_received" | "selection_requested" | "aw
 type FeeStatus = "unpaid" | "simulated";
 type TripForm = {
   pickup: string; destination: string; departDate: string; returnDate: string;
-  departureTime: string; passengers: number; seats: number; notes: string;
+  departureTime: string; passengers: number; notes: string;
 };
 type Quote = {
   id: string; agency: string; vehicle: string; seats: number;
@@ -41,7 +41,7 @@ const daysAhead = (days: number) => {
 };
 const newForm = (): TripForm => ({
   pickup: "", destination: "", departDate: daysAhead(2), returnDate: daysAhead(3),
-  departureTime: "07:00", passengers: 10, seats: 12, notes: ""
+  departureTime: "07:00", passengers: 10, notes: ""
 });
 const loadRides = (): Ride[] => {
   try {
@@ -63,22 +63,50 @@ const badgeClass: Record<RideStatus, string> = {
   collecting: "amber", quotes_received: "green", selection_requested: "amber",
   awaiting_fee: "amber", confirmed: "green", cancelled: "rose"
 };
-function mockQuotes(seats: number): Quote[] {
-  // Illustrative, deliberately not an agency rate feed or quoted market prices.
-  const models = seats <= 8
-    ? ["8-seat tourist van", "8-seat premium van", "8-seat executive van"]
-    : seats <= 12
-    ? ["12-seat Traveller", "12-seat AC Traveller", "12-seat premium Traveller"]
-    : ["18-seat Traveller", "18-seat AC minibus", "18-seat executive minibus"];
-  const base = seats <= 8 ? 8800 : seats <= 12 ? 10800 : 15800;
-  return [
-    { id: "sample-a", agency: "Sample Partner A", vehicle: models[0], seats, price: base,
-      extraKm: 17, extraHour: 250, terms: "Sample terms: tolls, parking and permits additional.", ac: false, modelYear: "To be verified" },
-    { id: "sample-b", agency: "Sample Partner B", vehicle: models[1], seats, price: base + 1400,
-      extraKm: 19, extraHour: 300, terms: "Sample terms: driver allowance included; tolls and parking additional.", ac: true, modelYear: "To be verified" },
-    { id: "sample-c", agency: "Sample Partner C", vehicle: models[2], seats, price: base + 3300,
-      extraKm: 21, extraHour: 350, terms: "Sample terms: AC included; permits and tolls additional.", ac: true, modelYear: "To be verified" }
-  ];
+// Examples demonstrate vehicle-capacity matching. Real models, availability and rates
+// must be supplied by verified agency inventory from the shared booking API.
+type SampleVehicle = { name: string; capacity: number; ac: boolean };
+const SAMPLE_FLEET: SampleVehicle[] = [
+  { name: "Compact group van", capacity: 7, ac: true },
+  { name: "8-seat tourist van", capacity: 8, ac: true },
+  { name: "Tata Winger-style van", capacity: 9, ac: true },
+  { name: "Force Traveller-style minibus", capacity: 12, ac: false },
+  { name: "12-seat AC Traveller", capacity: 13, ac: true },
+  { name: "14-seat tourist Traveller", capacity: 14, ac: true },
+  { name: "17-seat Tempo Traveller", capacity: 17, ac: true },
+  { name: "18-seat Traveller", capacity: 18, ac: true },
+  { name: "20-seat mini coach", capacity: 20, ac: true },
+  { name: "21-seat mini coach", capacity: 21, ac: true },
+  { name: "25-seat minibus", capacity: 25, ac: true },
+  { name: "26-seat mini coach", capacity: 26, ac: true },
+  { name: "30-seat tourist bus", capacity: 30, ac: true },
+  { name: "32-seat tourist bus", capacity: 32, ac: true },
+  { name: "35-seat tourist bus", capacity: 35, ac: true },
+  { name: "40-seat coach", capacity: 40, ac: true },
+  { name: "45-seat coach", capacity: 45, ac: true },
+  { name: "50-seat coach", capacity: 50, ac: true },
+  { name: "55-seat large coach", capacity: 55, ac: true },
+  { name: "60-seat large coach", capacity: 60, ac: true }
+];
+function mockQuotes(passengers: number): Quote[] {
+  // Demo only: no made-up agency is represented as genuine live inventory.
+  const candidates = SAMPLE_FLEET.filter(vehicle => vehicle.capacity >= passengers);
+  const sampleChoices = candidates.slice(0, 3);
+  return sampleChoices.map((vehicle, index) => {
+    const examplePrice = Math.round((4200 + vehicle.capacity * 340 + index * 850) / 100) * 100;
+    return {
+      id: "sample-" + index,
+      agency: "Demo Agency " + (index + 1),
+      vehicle: vehicle.name,
+      seats: vehicle.capacity,
+      price: examplePrice,
+      extraKm: 17 + index * 2,
+      extraHour: 250 + index * 50,
+      terms: "Illustrative terms only. In the real flow, the agency supplies inclusions, tolls, driver allowance, permits, and cancellations.",
+      ac: vehicle.ac,
+      modelYear: "To be verified"
+    };
+  });
 }
 function Status({ status }: { status: RideStatus }) {
   return <span className={"gc-status gc-" + badgeClass[status]}>{stage[status]}</span>;
@@ -121,7 +149,7 @@ export default function CustomerBookingApp() {
       pickup: ride.pickup, destination: ride.destination,
       departDate: ride.departDate, returnDate: ride.returnDate,
       departureTime: ride.departureTime, passengers: ride.passengers,
-      seats: ride.seats, notes: ride.notes
+      notes: ride.notes
     });
     setEditingId(ride.id); go("home");
     setMessage("Editing your existing request. Changes may require fresh agency quotes; no second Grouppy booking fee is added.");
@@ -144,9 +172,8 @@ export default function CustomerBookingApp() {
     if (Number.isNaN(departure.getTime()) || departure.getTime() - Date.now() < 12 * 60 * 60 * 1000) {
       setError("Grouppy currently requires at least 12 hours' advance notice."); return;
     }
-    if (!Number.isInteger(form.passengers) || form.passengers < 1 || form.passengers > 18 ||
-        form.passengers > form.seats || ![8, 12, 18].includes(form.seats)) {
-      setError("Choose an 8, 12 or 18 seat vehicle with space for every passenger."); return;
+    if (!Number.isInteger(form.passengers) || form.passengers < 1 || form.passengers > 99) {
+      setError("Enter the total number of passengers, between 1 and 99. Vehicle capacity will be matched by agencies."); return;
     }
     const clean: TripForm = { ...form, pickup, destination };
     const date = new Date().toISOString();
@@ -166,11 +193,16 @@ export default function CustomerBookingApp() {
   };
   const loadDemoQuotes = (ride: Ride) => {
     if (ride.status !== "collecting") return;
+    const examples = mockQuotes(ride.passengers);
+    if (examples.length === 0) {
+      setMessage("No suitable vehicle exists in this small demo fleet. A live request would be checked against agency inventories and possibly coordinated for multiple vehicles.");
+      return;
+    }
     updates(ride.id, current => ({
-      ...current, quotes: mockQuotes(current.seats), status: "quotes_received",
+      ...current, quotes: examples, status: "quotes_received",
       updatedAt: new Date().toISOString()
     }));
-    setMessage("Three illustrative quotations loaded. No agencies received a request.");
+    setMessage(examples.length + " illustrative vehicle quote(s) loaded. No agencies received a request.");
   };
   const selectQuote = (ride: Ride, quote: Quote) => {
     if (ride.status !== "quotes_received") return;
@@ -238,8 +270,8 @@ export default function CustomerBookingApp() {
                 <div>
                   <div className="gc-overline"><span className="gc-gold-dot" /> GROUP TRAVEL MADE SIMPLE</div>
                   <h1>Where are we heading <em>together?</em></h1>
-                  <p>One group. One vehicle. Multiple agency quotes. Travel comfortably without endless phone calls.</p>
-                  <div className="gc-hero-chips"><span><ShieldCheck size={14} /> Verified agencies at launch</span><span><BusFront size={14} /> 8 • 12 • 18 seaters</span></div>
+                  <p>Tell us your group size. Agencies propose vehicles that fit your passengers, route and luggage—no need to choose a seating category first.</p>
+                  <div className="gc-hero-chips"><span><ShieldCheck size={14} /> Verified agencies at launch</span><span><BusFront size={14} /> Vans, Travellers and 30+ seat buses</span></div>
                 </div>
                 <div className="gc-route-art"><div className="gc-pin-one"><MapPin size={21} /></div><div className="gc-dashed-track" /><div className="gc-pin-two"><MapPin size={21} /></div><BusFront className="gc-hero-bus" size={78} strokeWidth={1.3} /></div>
               </section>
@@ -253,9 +285,14 @@ export default function CustomerBookingApp() {
                       <FormField title="Departure date"><div className="gc-input-icon"><CalendarDays size={17} /><input aria-label="Departure date" required type="date" min={nowDate()} value={form.departDate} onChange={event => setForm(prev => ({ ...prev, departDate: event.target.value, returnDate: event.target.value > prev.returnDate ? event.target.value : prev.returnDate }))} /></div></FormField>
                       <FormField title="Return date"><div className="gc-input-icon"><CalendarDays size={17} /><input aria-label="Return date" required type="date" min={form.departDate} value={form.returnDate} onChange={event => setForm(prev => ({ ...prev, returnDate: event.target.value }))} /></div></FormField>
                       <FormField title="Pickup time"><div className="gc-input-icon"><Clock3 size={17} /><input required aria-label="Pickup time" type="time" value={form.departureTime} onChange={event => setForm(prev => ({ ...prev, departureTime: event.target.value }))} /></div></FormField>
-                      <FormField title="Passengers"><div className="gc-stepper"><UsersRound size={17} /><button type="button" aria-label="Remove passenger" onClick={() => setForm(prev => ({ ...prev, passengers: Math.max(1, prev.passengers - 1) }))}>−</button><b>{form.passengers}</b><button type="button" aria-label="Add passenger" onClick={() => setForm(prev => ({ ...prev, passengers: Math.min(18, prev.passengers + 1), seats: [8, 12, 18].find(capacity => capacity >= Math.max(prev.seats, prev.passengers + 1)) || 18 }))}>+</button></div></FormField>
-                      <FormField title="Vehicle capacity" wide>
-                        <div className="gc-capacities">{[8, 12, 18].map(seats => <button key={seats} type="button" onClick={() => setForm(prev => ({ ...prev, seats, passengers: Math.min(prev.passengers, seats) }))} className={form.seats === seats ? "selected" : ""}><BusFront size={17} /> {seats} seats</button>)}</div>
+                      <FormField title="Number of passengers" wide>
+                        <div className="gc-stepper gc-passengers-control">
+                          <UsersRound size={19} />
+                          <button type="button" aria-label="Remove passenger" onClick={() => setForm(prev => ({ ...prev, passengers: Math.max(1, prev.passengers - 1) }))}>−</button>
+                          <input aria-label="Total passengers" required type="number" inputMode="numeric" min={1} max={99} value={form.passengers} onChange={event => setForm(prev => ({ ...prev, passengers: Number(event.target.value) }))} />
+                          <button type="button" aria-label="Add passenger" onClick={() => setForm(prev => ({ ...prev, passengers: Math.min(99, prev.passengers + 1) }))}>+</button>
+                        </div>
+                        <span className="gc-matching-hint">Grouppy finds vehicles based on your group size. Agencies can offer vans, Traveller models, minibuses or 30-seat and larger buses, depending on availability.</span>
                       </FormField>
                       <FormField title="Notes for agencies (optional)" wide><textarea maxLength={600} placeholder="Luggage, stops, child seats, accessibility requirements…" value={form.notes} onChange={event => setForm(prev => ({ ...prev, notes: event.target.value }))} /></FormField>
                     </div>
@@ -288,7 +325,7 @@ export default function CustomerBookingApp() {
 
             {tab === "details" && chosenRide && <>
               <button className="gc-back-link" onClick={() => go("requests")}><ArrowLeft size={17} /> All requests</button>
-              <div className="gc-page-head gc-detail-head"><div><span className="gc-mini-eyebrow">REQUEST {chosenRide.id}</span><h1>{chosenRide.pickup} <ArrowRight size={22} /> {chosenRide.destination}</h1><p>Round trip • {chosenRide.passengers} passengers • {chosenRide.seats}-seat vehicle</p></div><Status status={chosenRide.status} /></div>
+              <div className="gc-page-head gc-detail-head"><div><span className="gc-mini-eyebrow">REQUEST {chosenRide.id}</span><h1>{chosenRide.pickup} <ArrowRight size={22} /> {chosenRide.destination}</h1><p>Round trip • {chosenRide.passengers} passengers • Agency-matched vehicle</p></div><Status status={chosenRide.status} /></div>
               <div className="gc-details-grid">
                 <div className="gc-detail-main">
                   <section className="gc-panel gc-detail-panel">
@@ -308,14 +345,14 @@ export default function CustomerBookingApp() {
                     {chosenRide.status !== "cancelled" && <div className="gc-inline-actions"><button className="gc-outline-btn" onClick={() => editRide(chosenRide)}><Pencil size={16} /> Edit request</button><button className="gc-quiet-danger" onClick={() => cancelRide(chosenRide)}>Cancel request</button></div>}
                   </section>
                   {chosenRide.status === "collecting" && <section className="gc-panel gc-step-panel">
-                    <div className="gc-feature-icon"><Clock3 size={22} /></div><h2>Waiting for agency quotations</h2><p>In the live version, Grouppy sends this request to at least five eligible agencies near the pickup location. This prototype does not contact anyone.</p>
-                    <button className="gc-primary-btn" onClick={() => loadDemoQuotes(chosenRide)}>Load 3 sample quotations <ArrowRight size={17} /></button>
+                    <div className="gc-feature-icon"><Clock3 size={22} /></div><h2>Waiting for agency quotations</h2><p>In the live version, Grouppy sends your passenger count and trip details to at least five eligible agencies near the pickup location. Each agency can offer any suitable available vehicle, including 30-seat or larger buses. This prototype does not contact anyone.</p>
+                    <button className="gc-primary-btn" onClick={() => loadDemoQuotes(chosenRide)}>Load sample matching vehicles <ArrowRight size={17} /></button>
                   </section>}
                   {chosenRide.quotes.length > 0 && <section className="gc-quote-section">
                     <SectionTitle caption="Illustrative example prices only, not verified supplier quotations.">Compare vehicle quotations</SectionTitle>
                     <div className="gc-quotes">{[...chosenRide.quotes].sort((a, b) => a.price - b.price).map((quote, index) => <article key={quote.id} className={"gc-quote-card" + (chosenRide.chosenQuoteId === quote.id ? " gc-quote-selected" : "")}>
                       <div className="gc-quote-head"><span className={"gc-quote-label gc-label-" + index}>{index === 0 ? "LOWEST PRICE" : index === 1 ? "IDEAL BALANCE" : "PREMIUM OPTION"}</span><small>DEMO QUOTE</small></div>
-                      <h3>{quote.vehicle}</h3><p className="gc-agency">{quote.agency} · Vehicle year {quote.modelYear.toLowerCase()}</p>
+                      <h3>{quote.vehicle}</h3><p className="gc-agency">{quote.agency} · {quote.seats} passenger seats · Model year {quote.modelYear.toLowerCase()}</p>
                       <div className="gc-quote-price"><strong>{inr(quote.price)}</strong><span>example whole-vehicle trip fare</span></div>
                       <div className="gc-quote-fees"><span>Extra km: <b>{inr(quote.extraKm)}</b></span><span>Extra hour: <b>{inr(quote.extraHour)}</b></span><span>{quote.ac ? "AC included" : "AC not included"}</span></div>
                       <p className="gc-quote-terms">{quote.terms}</p>
@@ -339,7 +376,7 @@ export default function CustomerBookingApp() {
                   </section>}
                   {chosenRide.status === "cancelled" && <section className="gc-panel gc-step-panel"><XCircle size={25} /><h2>Request cancelled</h2><p>Only your local demonstration record was changed. Booking fees already marked simulated remain in the history; refund policy is not processed by this prototype.</p></section>}
                 </div>
-                <aside className="gc-detail-aside"><section className="gc-panel gc-summary"><h3>Trip summary</h3><div><span>Pickup</span><b>{chosenRide.pickup}</b></div><div><span>Destination</span><b>{chosenRide.destination}</b></div><div><span>Departure</span><b>{chosenRide.departDate} {chosenRide.departureTime}</b></div><div><span>Return</span><b>{chosenRide.returnDate}</b></div><div><span>Vehicle</span><b>{chosenRide.seats} seats</b></div><div><span>Grouppy customer fee</span><b>{chosenRide.feeStatus === "simulated" ? "₹100 · simulated" : "₹100 · not charged"}</b></div><hr /><small>Vehicle fare is negotiated separately with the selected agency and is subject to verified terms.</small></section></aside>
+                <aside className="gc-detail-aside"><section className="gc-panel gc-summary"><h3>Trip summary</h3><div><span>Pickup</span><b>{chosenRide.pickup}</b></div><div><span>Destination</span><b>{chosenRide.destination}</b></div><div><span>Departure</span><b>{chosenRide.departDate} {chosenRide.departureTime}</b></div><div><span>Return</span><b>{chosenRide.returnDate}</b></div><div><span>Vehicle</span><b>{selectedQuote ? selectedQuote.vehicle + " · " + selectedQuote.seats + " seats" : "Matched to " + chosenRide.passengers + " passengers"}</b></div><div><span>Grouppy customer fee</span><b>{chosenRide.feeStatus === "simulated" ? "₹100 · simulated" : "₹100 · not charged"}</b></div><hr /><small>Vehicle fare is negotiated separately with the selected agency and is subject to verified terms.</small></section></aside>
               </div>
             </>}
 
@@ -368,7 +405,7 @@ function RideCard({ ride, onOpen }: { ride: Ride; onOpen: () => void }) {
   return <button onClick={onOpen} className="gc-ride-card">
     <div className="gc-ride-top"><span className="gc-ride-id">{ride.id} · ROUND TRIP</span><Status status={ride.status} /></div>
     <div className="gc-ride-route"><span>{ride.pickup}</span><ArrowRight size={19} /><span>{ride.destination}</span></div>
-    <div className="gc-ride-meta"><span><CalendarDays size={15} /> {ride.departDate}</span><span><UsersRound size={15} /> {ride.passengers} people</span><span><BusFront size={15} /> {ride.seats} seats</span></div>
+    <div className="gc-ride-meta"><span><CalendarDays size={15} /> {ride.departDate}</span><span><UsersRound size={15} /> {ride.passengers} people</span><span><BusFront size={15} /> Vehicle matching</span></div>
     <div className="gc-ride-bottom"><span>{ride.quotes.length} {ride.quotes.length === 1 ? "quote" : "quotes"} · {ride.feeStatus === "simulated" ? "₹100 fee simulated" : "no fee paid"}</span><span>View details <ChevronRight size={17} /></span></div>
   </button>;
 }
