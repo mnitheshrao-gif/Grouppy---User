@@ -29,7 +29,6 @@ type Ride = TripForm & {
 
 const STORE_KEY = "grouppy-customer-roundtrip-prototype-v1";
 const BOOKING_FEE = 100;
-const C = { green: "#0b5d3b" };
 const inr = (value: number) => "₹" + Number(value).toLocaleString("en-IN");
 const nowDate = () => {
   const d = new Date();
@@ -184,9 +183,9 @@ export default function CustomerBookingApp() {
   const simulateAgencyApproval = (ride: Ride) => {
     if (ride.status !== "selection_requested") return;
     updates(ride.id, current => ({
-      ...current, status: "awaiting_fee", updatedAt: new Date().toISOString()
+      ...current, status: current.feeStatus === "simulated" ? "confirmed" : "awaiting_fee", updatedAt: new Date().toISOString()
     }));
-    setMessage("SIMULATION: agency allocation approved. This is not a real vehicle confirmation.");
+    setMessage(ride.feeStatus === "simulated" ? "SIMULATION: revised vehicle approved. Original ₹100 booking fee retained; no additional fee." : "SIMULATION: agency allocation approved. This is not a real vehicle confirmation.");
   };
   const simulateCustomerFee = (ride: Ride) => {
     if (ride.status !== "awaiting_fee") return;
