@@ -13,11 +13,11 @@ Run `npm run build` to compile the Vite bundle.
 
 ## User journey implemented
 
-- Responsive customer home screen and 8 / 12 / 18-seater selection
+- Responsive customer home screen and direct passenger-count entry; customers do **not** select vehicle capacity
 - Full pickup and destination fields, departure and return dates, pickup time and group size
 - Twelve-hour minimum notice validation for round-trip requests
 - Request tracking with unique local demo IDs
-- Three sample quotations showing **lowest / ideal / premium**, extra kilometre and extra-hour rates and terms
+- Illustrative suitable-vehicle quotations (including 30-seater and larger buses where the group requires them), showing **lowest / ideal / premium**, extra kilometre and extra-hour rates and terms
 - Customer selects one quotation; agency confirmation is simulated separately
 - Simulated ₹100 customer booking charge **only after** a simulated agency allocation
 - Edits reuse the original simulated booking fee; changing terms requires fresh quotes and allocation approval
@@ -46,3 +46,9 @@ The booking-fee policy remains subject to applicable laws and legal review. If G
 ## Important design decision
 
 This app is a responsive **React + Vite web application** that can be used on mobile browsers. It is not yet a packaged Android/iOS native binary or an app-store release. The main branch's older seat-sharing design remains available for reference.
+
+## Passenger-first matching (5 November update)
+
+Customers specify **how many people are travelling**. They do not select an 8-, 12- or 18-seater in advance. The production system should query **all verified agency fleet records** and return offers with sufficient passenger capacity, with the actual vehicle model and seat count attached to each quote. Vehicle classes can include tourist vans, Tata/Mahindra vans, Force Travellers, Eicher/Tata minibuses, 30-seat tourist buses and larger coaches; exact models and legally permitted seating capacities must come from agency vehicle records, not fixed client-side sizes.
+
+The prototype contains **20 illustrative capacities** from 7 through 60 seats, including 30, 32, 35, 40, 45, 50 and 60. These examples are not a complete or validated inventory. For groups larger than the example fleet, the demo keeps the request pending instead of fabricating quotes; production operations can offer multiple vehicles when needed, after agency confirmation. Genuine prices and capacities remain to be verified.
